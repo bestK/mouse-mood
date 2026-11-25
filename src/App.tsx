@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CreditCard, KeyRound, RotateCcw, SlidersHorizontal } from 'lucide-react';
+import { CreditCard, Crosshair, KeyRound, RotateCcw, SlidersHorizontal } from 'lucide-react';
 import { MoodProvider, useMood } from '@/mood-recognition';
 import model from '@/mood-recognition/MoodRecognition.json';
 import { COPY, detectInitialLang, saveLang, type Lang } from '@/i18n';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TelemetryRail } from '@/components/TelemetryRail';
+import { CursorHud } from '@/components/CursorHud';
 import { CheckoutScenario } from '@/components/scenarios/CheckoutScenario';
 import { StrictFormScenario } from '@/components/scenarios/StrictFormScenario';
 import { DeepSettingsScenario } from '@/components/scenarios/DeepSettingsScenario';
@@ -35,6 +36,7 @@ function InstrumentBench() {
   const [lang, setLang] = useState<Lang>(detectInitialLang);
   const [scenario, setScenario] = useState<ScenarioId>('checkout');
   const [stageState, setStageState] = useState<1 | 2 | 3>(1);
+  const [hudEnabled, setHudEnabled] = useState(true);
   const [resetSignal, setResetSignal] = useState(0);
   const { mood } = useMood();
 
@@ -54,10 +56,12 @@ function InstrumentBench() {
 
   return (
     <div className="instrument-shell app-shell min-h-screen w-full" data-mood={moodKey}>
-      <div className="mx-auto flex min-h-screen w-full max-w-[1160px] flex-col border-x border-border">
-        {/* Precision Top Bar */}
+      <CursorHud enabled={hudEnabled} />
+
+      <div className="mx-auto flex min-h-screen w-full max-w-[1160px] flex-col px-4 sm:px-6">
+        {/* Clean Open Header */}
         <header
-          className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border px-4 sm:px-6"
+          className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border/70"
           data-mood-ignore=""
         >
           <div className="flex items-center gap-2.5">
@@ -88,6 +92,23 @@ function InstrumentBench() {
 
             <Button
               type="button"
+              variant={hudEnabled ? 'secondary' : 'outline'}
+              size="sm"
+              onClick={() => setHudEnabled((v) => !v)}
+              aria-pressed={hudEnabled}
+              className={cn(
+                'hidden h-8 gap-1.5 px-2.5 font-mono text-xs sm:inline-flex',
+                hudEnabled
+                  ? 'border border-zinc-700 text-foreground'
+                  : 'text-muted-foreground',
+              )}
+            >
+              <Crosshair className="size-3.5" />
+              <span>{copy.hud}</span>
+            </Button>
+
+            <Button
+              type="button"
               variant="outline"
               size="sm"
               onClick={toggleLang}
@@ -113,12 +134,12 @@ function InstrumentBench() {
           </div>
         </header>
 
-        {/* Split Instrument Grid */}
-        <main className="grid flex-1 grid-cols-1 divide-y divide-border lg:grid-cols-[minmax(0,1fr)_356px] lg:divide-x lg:divide-y-0">
+        {/* Open Two-Column Bench (zero extraneous vertical frame lines) */}
+        <main className="grid flex-1 grid-cols-1 items-start gap-6 py-6 lg:grid-cols-[minmax(0,1fr)_356px] lg:gap-8 lg:py-8">
           {/* Interactive Stage Column */}
-          <section className="flex min-w-0 flex-col">
+          <section className="flex min-w-0 flex-col gap-5">
             <div
-              className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-2.5 sm:h-14 sm:px-6 sm:py-0"
+              className="flex flex-wrap items-center justify-between gap-3"
               data-mood-ignore=""
             >
               <Tabs
@@ -128,7 +149,7 @@ function InstrumentBench() {
                   setStageState(1);
                 }}
               >
-                <TabsList className="h-8 bg-muted p-0.5">
+                <TabsList className="h-9 bg-muted p-1">
                   <TabsTrigger value="checkout" className="scenario-tab h-7 px-3 text-xs">
                     <CreditCard className="size-3.5" />
                     <span>{copy.tabs.checkout}</span>
@@ -146,7 +167,7 @@ function InstrumentBench() {
 
               {/* Self-Explanatory Live State Rail: S1 · S2 · S3 */}
               <div
-                className="inline-flex items-center divide-x divide-border overflow-hidden rounded-md border border-border bg-muted/60 font-mono text-[11px]"
+                className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/60 p-0.5 font-mono text-[11px]"
                 data-active-state={stageState}
               >
                 {([1, 2, 3] as const).map((s) => {
@@ -155,7 +176,7 @@ function InstrumentBench() {
                     <span
                       key={s}
                       className={cn(
-                        'px-2 py-1 transition-colors',
+                        'rounded px-2 py-0.5 transition-colors',
                         active
                           ? s === 3
                             ? moodKey === 'lost'
@@ -174,7 +195,7 @@ function InstrumentBench() {
               </div>
             </div>
 
-            <div className="flex flex-1 items-center justify-center p-5 sm:p-10">
+            <div className="flex min-h-[480px] items-center justify-center rounded-lg border border-border/60 bg-card/30 p-5 sm:p-10">
               {scenario === 'checkout' && (
                 <CheckoutScenario
                   copy={copy}
@@ -199,7 +220,7 @@ function InstrumentBench() {
             </div>
           </section>
 
-          {/* Live GBDT Telemetry Bay */}
+          {/* Live GBDT Telemetry Card */}
           <TelemetryRail copy={copy} />
         </main>
       </div>

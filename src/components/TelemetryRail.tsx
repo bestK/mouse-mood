@@ -60,7 +60,7 @@ export function TelemetryRail({ copy }: TelemetryRailProps) {
 
   return (
     <aside
-      className="flex flex-col divide-y divide-border bg-card/55"
+      className="flex flex-col divide-y divide-border/70 rounded-lg border border-border bg-card lg:sticky lg:top-8"
       data-mood-ignore=""
       data-active-mood={moodKey}
     >
@@ -208,7 +208,7 @@ export function TelemetryRail({ copy }: TelemetryRailProps) {
       </div>
 
       {/* Technical Spec Footer */}
-      <div className="mt-auto flex items-center justify-between px-5 py-3 font-mono text-[11px] text-zinc-500">
+      <div className="flex items-center justify-between px-5 py-3 font-mono text-[11px] text-zinc-500">
         <span>{copy.modelTag}</span>
         <span>{copy.telemetry.offline}</span>
       </div>

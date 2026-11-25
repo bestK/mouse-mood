@@ -121,7 +121,9 @@ export function CheckoutScenario({ copy, resetSignal, onStateChange }: CheckoutS
             <h2 className="truncate text-sm font-semibold tracking-tight text-foreground">
               {copy.checkout.item}
             </h2>
-            <span className="font-mono text-[10px] text-zinc-500">{copy.checkout.sku}</span>
+            <span className="hidden shrink-0 whitespace-nowrap font-mono text-[10px] text-zinc-500 sm:inline">
+              {copy.checkout.sku}
+            </span>
           </div>
           <div className="mt-0.5 truncate text-xs text-muted-foreground">
             {copy.checkout.variant}

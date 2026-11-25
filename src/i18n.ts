@@ -40,6 +40,7 @@ export const COPY = {
     brand: 'Mood Recognition',
     modelTag: 'v0.4 · 360 GBDT',
     reset: 'Reset',
+    hud: 'HUD',
     states: {
       s1: 'S1',
       s2: 'S2',
@@ -180,6 +181,7 @@ export const COPY = {
     brand: 'Mood Recognition',
     modelTag: 'v0.4 · 360 GBDT',
     reset: '重置',
+    hud: '准星',
     states: {
       s1: 'S1',
       s2: 'S2',
