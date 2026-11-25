@@ -1,0 +1,8 @@
+node_modules
+dist
+.local-model
+.DS_Store
+*.log
+
+# Libraries.dev Model License v1.5: never commit the kit or model to a public repo
+src/mood-recognition/
