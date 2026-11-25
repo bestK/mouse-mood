@@ -1,17 +1,22 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { Check, KeyRound, RotateCcw, Sparkles } from 'lucide-react';
-import { useMood } from '../../mood-recognition';
-import type { CopyDict } from '../../i18n';
+import { Check, KeyRound, RotateCcw, Terminal } from 'lucide-react';
+import { useMood } from '@/mood-recognition';
+import type { CopyDict } from '@/i18n';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
 
 type StrictFormScenarioProps = {
   copy: CopyDict;
   resetSignal: number;
+  onStateChange: (state: 1 | 2 | 3) => void;
 };
 
 const KEY_REGEX = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
 const SAMPLE_KEY = 'A9F2-K4M8-7Q1X';
 
-export function StrictFormScenario({ copy, resetSignal }: StrictFormScenarioProps) {
+export function StrictFormScenario({ copy, resetSignal, onStateChange }: StrictFormScenarioProps) {
   const { mood, reaction } = useMood();
   const [value, setValue] = useState('');
   const [invalid, setInvalid] = useState(false);
@@ -24,13 +29,17 @@ export function StrictFormScenario({ copy, resetSignal }: StrictFormScenarioProp
     setActivated(false);
   }, [resetSignal]);
 
-  const state = activated
+  const state: 1 | 2 | 3 = activated
     ? 1
     : mood === 'frustrated'
       ? 3
       : mood === 'confused' || mood === 'lost'
         ? 2
         : 1;
+
+  useEffect(() => {
+    onStateChange(state);
+  }, [state, onStateChange]);
 
   const assistActive = !activated && (state >= 2 || reaction >= 0.25);
 
@@ -49,45 +58,58 @@ export function StrictFormScenario({ copy, resetSignal }: StrictFormScenarioProp
 
   if (activated) {
     return (
-      <div className="stage-card checkout-paid">
-        <div className="paid-icon">
-          <Check size={24} strokeWidth={2.4} />
+      <div className="flex w-full max-w-[440px] flex-col items-center gap-4 rounded-lg border border-border bg-card p-8 text-center">
+        <div className="grid size-11 place-items-center rounded-md border border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
+          <Check className="size-5" />
         </div>
-        <h2 className="stage-title">{copy.form.success}</h2>
-        <div className="mono-pill">{value.trim()}</div>
-        <button
+        <h2 className="text-base font-semibold tracking-tight">{copy.form.success}</h2>
+        <Badge variant="outline" className="font-mono text-xs text-zinc-300">
+          {value.trim()}
+        </Badge>
+        <Button
           type="button"
-          className="btn-secondary"
+          variant="outline"
+          size="sm"
+          className="mt-2"
           onClick={() => {
             setValue('');
             setInvalid(false);
             setActivated(false);
           }}
         >
-          <RotateCcw size={15} />
+          <RotateCcw className="size-3.5" />
           <span>{copy.form.resetKey}</span>
-        </button>
+        </Button>
       </div>
     );
   }
 
   return (
-    <form className="stage-card strict-form" data-state={state} onSubmit={handleSubmit} noValidate>
-      <div className="form-head">
-        <div className="form-icon" aria-hidden="true">
-          <KeyRound size={20} strokeWidth={1.85} />
+    <form
+      className="strict-stage strict-form flex w-full max-w-[440px] flex-col gap-5 rounded-lg border border-border bg-card p-6"
+      data-state={state}
+      onSubmit={handleSubmit}
+      noValidate
+    >
+      <div className="flex items-center gap-3">
+        <div
+          className="grid size-9 place-items-center rounded-md border border-border bg-muted text-zinc-200"
+          aria-hidden="true"
+        >
+          <KeyRound className="size-4" strokeWidth={1.7} />
         </div>
-        <h2 className="stage-title">{copy.form.heading}</h2>
+        <h2 className="text-sm font-semibold tracking-tight">{copy.form.heading}</h2>
       </div>
 
-      <div className="field-group">
-        <label className="field-label" htmlFor="serial-key-input">
+      <Separator />
+
+      <div className="flex flex-col gap-2">
+        <label htmlFor="serial-key-input" className="text-xs font-medium text-zinc-400">
           {copy.form.label}
         </label>
-        <input
+        <Input
           ref={inputRef}
           id="serial-key-input"
-          className="field-input mono-input"
           type="text"
           value={value}
           required
@@ -96,6 +118,7 @@ export function StrictFormScenario({ copy, resetSignal }: StrictFormScenarioProp
           placeholder={copy.form.placeholder}
           autoComplete="off"
           spellCheck={false}
+          className="h-10 bg-background font-mono text-sm tracking-wider"
           onChange={(e) => {
             setValue(e.target.value);
             if (invalid && KEY_REGEX.test(e.target.value.trim())) {
@@ -103,24 +126,28 @@ export function StrictFormScenario({ copy, resetSignal }: StrictFormScenarioProp
             }
           }}
         />
-
-        <div className="field-feedback-slot">
+        <div className="min-h-[18px]">
           {invalid && (
-            <div className="field-error" role="alert">
+            <p className="text-xs font-medium text-rose-400" role="alert">
               {copy.form.invalid}
-            </div>
+            </p>
           )}
         </div>
       </div>
 
-      <div className="assist-bar" data-active={assistActive ? 'true' : 'false'}>
-        <div className="assist-pattern">
-          <Sparkles size={14} />
-          <span className="mono-num">{copy.form.formatHint}</span>
+      {/* Reserved adaptive assist rail — fades in via --mood with zero layout shift */}
+      <div
+        data-active={assistActive ? 'true' : 'false'}
+        className="strict-assist assist-bar flex items-center justify-between gap-3 rounded-md border border-amber-500/35 bg-amber-500/10 px-3 py-2"
+      >
+        <div className="flex items-center gap-2 font-mono text-xs text-zinc-100">
+          <Terminal className="size-3.5 text-amber-400" />
+          <span>{copy.form.formatHint}</span>
         </div>
-        <button
+        <Button
           type="button"
-          className="btn-ghost-accent"
+          variant="outline"
+          size="xs"
           tabIndex={assistActive ? 0 : -1}
           onClick={() => {
             setValue(SAMPLE_KEY);
@@ -129,12 +156,12 @@ export function StrictFormScenario({ copy, resetSignal }: StrictFormScenarioProp
           }}
         >
           {copy.form.fillSample}
-        </button>
+        </Button>
       </div>
 
-      <button type="submit" className="btn-primary">
+      <Button type="submit" size="lg" className="h-10 w-full">
         {copy.form.activate}
-      </button>
+      </Button>
     </form>
   );
 }

@@ -21,11 +21,11 @@ type KinematicCanvasProps = {
 };
 
 const MOOD_RGB: Record<string, [number, number, number]> = {
-  neutral: [37, 99, 235],
-  frustrated: [220, 38, 38],
-  confused: [217, 119, 6],
-  lost: [79, 70, 229],
-  away: [148, 163, 184],
+  neutral: [228, 228, 231],
+  frustrated: [244, 63, 94],
+  confused: [245, 158, 11],
+  lost: [56, 189, 248],
+  away: [82, 82, 91],
 };
 
 export function KinematicCanvas({ mood, reaction }: KinematicCanvasProps) {
@@ -102,10 +102,10 @@ export function KinematicCanvas({ mood, reaction }: KinematicCanvasProps) {
 
       ctx.clearRect(0, 0, w, h);
 
-      // Subtle architectural calibration grid
-      ctx.strokeStyle = 'rgba(17, 24, 39, 0.055)';
+      // Clinical dark reticle grid
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.045)';
       ctx.lineWidth = 1;
-      const cols = 6;
+      const cols = 8;
       const rows = 4;
       for (let i = 1; i < cols; i++) {
         const gx = Math.round((w / cols) * i) + 0.5;
@@ -122,20 +122,30 @@ export function KinematicCanvas({ mood, reaction }: KinematicCanvasProps) {
         ctx.stroke();
       }
 
+      // Center precision crosshair
+      const cx = Math.round(w / 2) + 0.5;
+      const cy = Math.round(h / 2) + 0.5;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+      ctx.beginPath();
+      ctx.moveTo(cx - 5, cy);
+      ctx.lineTo(cx + 5, cy);
+      ctx.moveTo(cx, cy - 5);
+      ctx.lineTo(cx, cy + 5);
+      ctx.stroke();
+
       const activeKey = moodRef.current.mood ?? 'neutral';
       const [r, g, b] = MOOD_RGB[activeKey] ?? MOOD_RGB.neutral;
       const reactAmt = moodRef.current.reaction;
 
-      // Ambient corner glow proportional to reaction
       if (reactAmt > 0.02) {
-        const grad = ctx.createRadialGradient(w * 0.5, h * 0.5, 4, w * 0.5, h * 0.5, w * 0.7);
-        grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${(0.12 * reactAmt).toFixed(3)})`);
+        const grad = ctx.createRadialGradient(w * 0.5, h * 0.5, 2, w * 0.5, h * 0.5, w * 0.65);
+        grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${(0.11 * reactAmt).toFixed(3)})`);
         grad.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, w, h);
       }
 
-      // Kinematic pointer path
+      // Vector trace
       if (points.length > 1) {
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
@@ -145,8 +155,8 @@ export function KinematicCanvas({ mood, reaction }: KinematicCanvasProps) {
           const age = 1 - (now - p1.t) / TRAIL_MS;
           if (age <= 0) continue;
           const speedNorm = Math.min(1, p1.speed / 1800);
-          ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${(age * (0.3 + speedNorm * 0.65)).toFixed(3)})`;
-          ctx.lineWidth = 1.2 + age * (1.2 + speedNorm * 1.8);
+          ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${(age * (0.28 + speedNorm * 0.7)).toFixed(3)})`;
+          ctx.lineWidth = 1 + age * (0.9 + speedNorm * 1.3);
           ctx.beginPath();
           ctx.moveTo(p0.x * w, p0.y * h);
           ctx.lineTo(p1.x * w, p1.y * h);
@@ -156,22 +166,24 @@ export function KinematicCanvas({ mood, reaction }: KinematicCanvasProps) {
         const tipAge = Math.max(0, 1 - (now - tip.t) / TRAIL_MS);
         ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${(0.95 * tipAge).toFixed(3)})`;
         ctx.beginPath();
-        ctx.arc(tip.x * w, tip.y * h, 3.2, 0, Math.PI * 2);
+        ctx.arc(tip.x * w, tip.y * h, 2.5, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // Click / disabled-press ripples
+      // Press target rings
       for (const p of pulses) {
         const prog = (now - p.t) / PULSE_MS;
         if (prog >= 1) continue;
         const alpha = (1 - prog) * 0.85;
-        const rad = 3 + prog * (p.disabled ? 18 : 12);
+        const rad = 3 + prog * (p.disabled ? 18 : 11);
+        const px = p.x * w;
+        const py = p.y * h;
         ctx.strokeStyle = p.disabled
-          ? `rgba(220, 38, 38, ${alpha.toFixed(3)})`
+          ? `rgba(244, 63, 94, ${alpha.toFixed(3)})`
           : `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(3)})`;
-        ctx.lineWidth = p.disabled ? 2 : 1.3;
+        ctx.lineWidth = p.disabled ? 1.5 : 1;
         ctx.beginPath();
-        ctx.arc(p.x * w, p.y * h, rad, 0, Math.PI * 2);
+        ctx.arc(px, py, rad, 0, Math.PI * 2);
         ctx.stroke();
       }
 
@@ -188,5 +200,5 @@ export function KinematicCanvas({ mood, reaction }: KinematicCanvasProps) {
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="kinematic-canvas" aria-hidden="true" />;
+  return <canvas ref={canvasRef} className="block h-full w-full" aria-hidden="true" />;
 }
